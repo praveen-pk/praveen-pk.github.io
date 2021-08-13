@@ -22,7 +22,7 @@ title: Praween's TechBits
 email: praween.paladugu@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Praween's Tech Bits.
-baseurl: "/tech_blog" # the subpath of your site, e.g. /blog
+  #baseurl: "/tech_blog" # the subpath of your site, e.g. /blog
 url: "https://praveen-pk.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
 github_username:  praveen-pk
