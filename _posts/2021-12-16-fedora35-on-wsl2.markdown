@@ -33,6 +33,8 @@ FROM fedora:35
 ENV username=<your_user_name>
 
 RUN dnf -y update && dnf -y install passwd shadow-utils setup util-linux sudo
+# some optional utilities
+RUN dnf -y install iputils openssh-clients which ncurses
 RUN dnf -y remove grubby kmod
 
 RUN useradd -G wheel ${username}
