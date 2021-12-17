@@ -1,0 +1,99 @@
+---
+layout: post
+title:  "Fedora 35 image on WSL2"
+date:   2021-12-16 11:00:00 +0000
+categories: jekyll update
+---
+Below are the steps to create and start a ***Fedora 35*** based ***WSL2*** instance on ***Windows 11***.
+
+Steps for installing WSL2 are at [Install WSL](https://docs.microsoft.com/en-us/windows/wsl/install).
+
+Custom WSL2 images can be created from container images of respective distros.
+
+# Fedora 35
+
+Follow the steps below to create the Fedora 35 image to be imported into WSL2:
+
+```
+# More details on wsl.conf settings at
+# https://devblogs.microsoft.com/commandline/automatically-configuring-wsl/
+
+cat <<WSL_CONF >wsl.conf
+[automount]
+enabled = true
+options = "metadata"
+mountFsTab = false
+WSL_CONF
+
+
+cat <<DFILE >Dockerfile
+FROM fedora:35
+
+# Update the username here before running
+ENV username=<your_user_name>
+
+RUN dnf -y update && dnf -y install passwd shadow-utils setup util-linux sudo
+RUN dnf -y remove grubby kmod
+
+RUN useradd -G wheel ${username}
+RUN passwd -d ${username}
+
+RUN echo >> /etc/sudoers
+RUN echo '%wheel        ALL=(ALL)       NOPASSWD: ALL' >> /etc/sudoers
+
+COPY wsl.conf /etc/wsl.conf
+
+DFILE
+```
+## Create Container image
+To create the docker image run:
+
+```
+# This command should be executed in the directory which has above mentioned
+# Dockerfile and wsl.conf files.
+docker build --tag fedora:35_wsl .
+
+```
+***TIP***: While executing docker build, run in a directory with just the needed files. Docker build tends to enumerate all the files in the directory before running. This could be slow if you start in a directory with a large colleciton of files.
+
+
+## Export Fedora35 Image
+To Export the image start the container and run docker export in a different terminal:
+
+```
+docker run --rm -i -t fedora:35_wsl /bin/bash
+
+# in a different terminal
+docker export <container_from_above_step> > Fedora_35_wsl.tar.gz
+
+# After export is complete feel free to kill the above container
+
+```
+
+# WSL
+
+On Windows 11 host, start ***cmd*** with ***Administrator*** Privileges. In cmd run the following command to import the Fedora 35 Image:
+
+```
+# This command will import Fedora 35 image and create a new VM in WSL.
+# The vhdx image for the vm is stored at
+# C:\Users\<user_name>\Documents\Fedora35_wsl location.
+
+wsl --import fedora35 C:\Users\<user_name>\Documents\Fedora35_wsl ./Fedora_35_wsl.tar.gz
+
+
+# to start the Fedora 35 VM
+wsl -d fedora35 -u <user_name> # This is the username configured in Dockerfile
+
+[user_name@win_hostname Fedora35]$ cat /etc/fedora-release
+Fedora release 35 (Thirty Five)
+
+# To delete the Fedora 35 VM
+
+wsl --terminate fedora35
+wsl --unregister fedora35
+```
+
+# References
+* [Configure wsl](https://devblogs.microsoft.com/commandline/automatically-configuring-wsl/)
+* [Install WSL](https://docs.microsoft.com/en-us/windows/wsl/install)
